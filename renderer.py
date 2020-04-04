@@ -3,6 +3,11 @@ import csv
 from dataclasses import dataclass, field
 
 
+class TemplateNotFoundError(Exception):
+    def __str__(self):
+        return "File: jeopardy_template.html was not found."
+
+
 @dataclass
 class Question:
     value: int
@@ -25,6 +30,13 @@ def get_categories(file):
                 categories.update({_row[0]: [Question(_row[1], _row[2], _row[3], _row[4])]})
             else:
                 categories[_row[0]].append(Question(_row[1], _row[2], _row[3], _row[4]))
+
+    qlens = [len(categories[cat]) for cat in categories]
+    print(qlens)
+    same_len = all(qlen == qlens[0] for qlen in qlens)
+    print(same_len)
+    if not same_len:
+        raise ValueError("Every category has to have the same number of questions")
     return categories
 
 
@@ -43,7 +55,10 @@ def render(rows, categories):
     template_loader = jinja2.FileSystemLoader(searchpath="./")
     template_env = jinja2.Environment(loader=template_loader)
     TEMPLATE_FILE = "jeopardy_template.html"
-    template = template_env.get_template(TEMPLATE_FILE)
+    try:
+        template = template_env.get_template(TEMPLATE_FILE)
+    except jinja2.exceptions.TemplateNotFound:
+        raise TemplateNotFoundError
     rendered = template.render(categories=categories.keys(), rows=rows)
     return rendered
 
@@ -54,4 +69,3 @@ def make_jeopardy(file):
     rendered = render(rows, categories)
     with open("done.html", "w", encoding='utf-8') as f:
         f.write(rendered)
-    print("DONE")
