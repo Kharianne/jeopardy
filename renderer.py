@@ -32,9 +32,7 @@ def get_categories(file):
                 categories[_row[0]].append(Question(_row[1], _row[2], _row[3], _row[4]))
 
     qlens = [len(categories[cat]) for cat in categories]
-    print(qlens)
     same_len = all(qlen == qlens[0] for qlen in qlens)
-    print(same_len)
     if not same_len:
         raise ValueError("Every category has to have the same number of questions")
     return categories
